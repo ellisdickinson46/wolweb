@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"embed"
+	"io/fs"
 	"log"
 	"net"
 	"net/http"
@@ -25,6 +27,9 @@ type Args struct {
 	ConfigPath string
 	DevicesPath string
 }
+
+//go:embed static
+var staticFiles embed.FS
 
 func main() {
 	processArgs()
@@ -71,7 +76,12 @@ func setupWebServer() {
 	}
 
 	// map directory to server static files
-	router.PathPrefix(basePath + "/static/").Handler(http.StripPrefix(basePath+"/static/", CacheControlWrapper(http.FileServer(http.Dir("./static")))))
+	var staticFS = fs.FS(staticFiles)
+	staticFS, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		panic(err)
+	}
+	router.PathPrefix(basePath + "/static/").Handler(http.StripPrefix(basePath+"/static/", CacheControlWrapper(http.FileServer(http.FS(staticFS)))))
 
 	// Define Home Route
 	router.HandleFunc(basePath+"/", renderHomePage).Methods("GET")
