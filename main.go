@@ -36,7 +36,6 @@ type Args struct {
 }
 
 func main() {
-	log.Printf("Starting WakeOnLan Webserver version %s", Version)
 	processArgs()
 	setWorkingDir()
 	loadConfig()
@@ -90,10 +89,8 @@ func setupWebServer() {
 	router.HandleFunc(basePath+"/wake/{deviceName}", wakeUpWithDeviceName).Methods("GET")
 	router.HandleFunc(basePath+"/wake/{deviceName}/", wakeUpWithDeviceName).Methods("GET")
 
-	if appConfig.ReadOnly == false {
-		// Define Data save Api function
-		router.HandleFunc(basePath+"/data/save", saveData).Methods("POST")
-	}
+	// Define Data save Api function
+	router.HandleFunc(basePath+"/data/save", saveData).Methods("POST")
 
 	// Define Data get Api function
 	router.HandleFunc(basePath+"/data/get", getData).Methods("GET")
