@@ -162,12 +162,19 @@
     height: 48px;
 }
 
-.jsgrid-invalid input,
-.jsgrid-invalid select,
-.jsgrid-invalid textarea {
+html[data-bs-theme="light"] .jsgrid-invalid input,
+html[data-bs-theme="light"] .jsgrid-invalid select,
+html[data-bs-theme="light"] .jsgrid-invalid textarea {
     background: #ffe3e5;
     border: 1px solid #ff808a
 }
+html[data-bs-theme="dark"] .jsgrid-invalid input,
+html[data-bs-theme="dark"] .jsgrid-invalid select,
+html[data-bs-theme="dark"] .jsgrid-invalid textarea {
+    background: #620007;
+    border: 1px solid #8e010d
+}
+
 
 .jsgrid-pager-container {
     margin-top: 10px;
