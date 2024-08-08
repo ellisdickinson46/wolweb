@@ -77,7 +77,13 @@ function renderData() {
         width: null,
         validate: {
             validator: "required",
-            message: "Device name is a required field."
+            message: function () {
+                let data =  {
+                    success: false,
+                    message: "Device name is a required field."
+                }
+                $.showToast(data);
+            }
         }
     });
 
@@ -89,7 +95,13 @@ function renderData() {
         validate: {
             validator: "pattern",
             param: /^[0-9a-f]{1,2}([\.:-])(?:[0-9a-f]{1,2}\1){4}[0-9a-f]{1,2}$/gmi,
-            message: "MAC Address is a required field."
+            message: function () {
+                let data =  {
+                    success: false,
+                    message: "MAC Address is a required field."
+                }
+                $.showToast(data);
+            }
         }
     });
 
@@ -100,7 +112,13 @@ function renderData() {
         width: null,
         validate: {
             validator: "required",
-            message: "Broadcast IP Address is a required field."
+            message: function () {
+                let data =  {
+                    success: false,
+                    message: "Broadcast Address is a required field."
+                }
+                $.showToast(data);
+            }
         },
         insertTemplate: function () {
             var $result = jsGrid.fields.text.prototype.insertTemplate.call(this); // original input
@@ -346,6 +364,7 @@ function renderData() {
 
         confirmDeleting: true,
         deleteConfirm: "Are you sure you want to delete this device?",
+        invalidNotify: null,
 
         data: appData.devices,
         fields: gridFields,
