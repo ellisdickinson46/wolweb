@@ -2,10 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/icefed/zlog"
 )
 
 func loadData() {
@@ -13,17 +14,17 @@ func loadData() {
 
 	devicesFile, fileErr := os.Open(args.DevicesPath)
 	if fileErr != nil {
-		log.Fatalf("Error loading devices.json file. \"%s\"", fileErr)
+		zlog.Errorf("Error loading devices.json file. \"%s\"", fileErr)
 	}
 
 	devicesDecoder := json.NewDecoder(devicesFile)
 	decodeErr := devicesDecoder.Decode(&appData)
 	if decodeErr != nil {
-		log.Fatalf("Error decoding devices.json file. \"%s\"", decodeErr)
+		zlog.Errorf("Error decoding devices.json file. \"%s\"", decodeErr)
 	}
 
-	log.Printf("Application data loaded from devices.json")
-	log.Println(" - devices defined in devices.json: ", len(appData.Devices))
+	zlog.Infof("Application data loaded from: %s", args.DevicesPath)
+	zlog.Debugf("--> Number of defined devices: %s", strconv.Itoa(len(appData.Devices)))
 	devicesFile.Close()
 }
 
@@ -33,7 +34,7 @@ func saveData(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var result HTTPResponseObject
 
-	log.Printf("New application data received for saving to disk")
+	zlog.Infof("New application data received for saving to disk")
 	if !appConfig.ReadOnly {
 		file, fileErr := os.OpenFile("devices.json", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 		decoderErr := json.NewDecoder(r.Body).Decode(&appData)
@@ -45,7 +46,7 @@ func saveData(w http.ResponseWriter, r *http.Request) {
 			result.ErrorObject = fileErr
 			// http.Error(w, err.Error(), http.StatusBadRequest)
 
-			log.Printf(" - Issues saving application data")
+			zlog.Infof(" - Issues saving application data")
 
 			// Attempt to match raised exception against common errors
 			if os.IsPermission(fileErr) {
@@ -60,7 +61,7 @@ func saveData(w http.ResponseWriter, r *http.Request) {
 			result.Success = false
 			result.ErrorObject = decoderErr
 			result.Message = baseErrStr + "The device data received by the API was invalid."
-			log.Printf(" - Issues decoding application data")
+			zlog.Infof(" - Issues decoding application data")
 		} else {
 			encoder := json.NewEncoder(file)
 			encoder.SetIndent("", "    ")
@@ -68,7 +69,7 @@ func saveData(w http.ResponseWriter, r *http.Request) {
 
 			result.Success = true
 			result.Message = "Devices data saved to devices.json file. There are now " + strconv.Itoa(len(appData.Devices)) + " device(s) defined in the list."
-			log.Printf(" - New application data saved to file devices.json")
+			zlog.Infof(" - New application data saved to file devices.json")
 		}
 		file.Close()
 	} else {
@@ -83,6 +84,6 @@ func getData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(appData)
-	log.Printf("Request for Application data served")
+	zlog.Infof("Request for Application data served")
 
 }

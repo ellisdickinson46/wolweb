@@ -4,8 +4,9 @@ import (
 	_ "embed"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
+
+	"github.com/icefed/zlog"
 )
 
 //go:embed index.html
@@ -29,19 +30,15 @@ func renderHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl, _ := template.New("index.html").Parse(indexHtml)
 	tmpl.Execute(w, pageData)
-	log.Println("Renedered the home page.")
+	zlog.Info("Renedered the home page.")
 
 }
 
 func redirectToHomePage(w http.ResponseWriter, r *http.Request) {
-
 	http.Redirect(w, r, appConfig.VDir+"/", http.StatusFound)
-
 }
 
 func checkHealth(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "text/html")
 	io.WriteString(w, "alive")
-
 }

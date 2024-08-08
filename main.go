@@ -4,7 +4,7 @@ import (
 	"embed"
 	"flag"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -15,16 +15,16 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/icefed/zlog"
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-var Version = "dev"
-
 // Global variables
 var (
-	appConfig AppConfig
-	appData   AppData
-	args      Args
+	appVersion = "dev"
+	appConfig  AppConfig
+	appData    AppData
+	args       Args
 
 	//go:embed static
 	staticFiles embed.FS
@@ -36,6 +36,20 @@ type Args struct {
 }
 
 func main() {
+	h := zlog.NewJSONHandler(&zlog.Config{
+		HandlerOptions: slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+		TimeFormatter: func(buf []byte, t time.Time) []byte {
+			return t.AppendFormat(buf, time.DateTime)
+		},
+		Development: true,
+	})
+	loggerInstance := zlog.New(h)
+	zlog.SetDefault(loggerInstance)
+
+	zlog.Infof("Starting Wake-on-Lan Web, Version \"%s\"", appVersion)
+
 	processArgs()
 	setWorkingDir()
 	loadConfig()
@@ -46,20 +60,19 @@ func main() {
 func setWorkingDir() {
 	thisApp, err := os.Executable()
 	if err != nil {
-		log.Fatalf("Error determining the directory. \"%s\"", err)
+		zlog.Errorf("Error determining the directory. \"%s\"", err)
 	}
 	appPath := filepath.Dir(thisApp)
 	os.Chdir(appPath)
-	log.Printf("Set working directory: %s", appPath)
+	zlog.Debugf("Set working directory: %s", appPath)
 }
 
 func loadConfig() {
-
 	err := cleanenv.ReadConfig(args.ConfigPath, &appConfig)
 	if err != nil {
-		log.Fatalf("Error loading config.json file. \"%s\"", err)
+		zlog.Errorf("Error loading config.json file. \"%s\"", err)
 	}
-	log.Printf("Application configuratrion loaded from config.json")
+	zlog.Info("Application configuratrion loaded successfully")
 }
 
 func setupWebServer() {
@@ -100,7 +113,7 @@ func setupWebServer() {
 
 	// Setup Webserver
 	httpListen := net.ParseIP(appConfig.Host).String() + ":" + strconv.Itoa(appConfig.Port)
-	log.Printf("Startup Webserver on \"%s\"", httpListen)
+	zlog.Infof("Startup Webserver on \"%s\"", httpListen)
 
 	srv := &http.Server{
 		Handler: gziphandler.GzipHandler(handlers.RecoveryHandler(handlers.PrintRecoveryStack(true))(router)),
@@ -110,7 +123,7 @@ func setupWebServer() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Fatal(srv.ListenAndServe())
+	zlog.Error(srv.ListenAndServe().Error())
 }
 
 func CacheControlWrapper(h http.Handler) http.Handler {
@@ -133,12 +146,12 @@ func processArgs() {
 
 	configPath, err := filepath.Abs(configPath)
 	if err != nil {
-		log.Fatal(err)
+		zlog.Error(err.Error())
 	}
 
 	devicesPath, err = filepath.Abs(devicesPath)
 	if err != nil {
-		log.Fatal(err)
+		zlog.Error(err.Error())
 	}
 
 	args.ConfigPath = configPath
