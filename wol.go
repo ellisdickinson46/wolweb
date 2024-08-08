@@ -108,7 +108,7 @@ func SendMagicPacket(macAddr, bcastAddr, iface string) error {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.BigEndian, magicPacket)
 	zlog.Infof("Attempting to send a magic packet to MAC %s\n", macAddr)
-	zlog.Infof("... Broadcasting to: %s\n", bcastAddr)
+	zlog.Infof("--> Broadcasting to: %s\n", bcastAddr)
 
 	// Get a UDPAddr to send the broadcast to
 	udpAddr, err := net.ResolveUDPAddr("udp", bcastAddr)
